@@ -17,6 +17,7 @@ class USBI2C():
             USBI2C.ch341.CH341CloseDevice(self.usb_id)
         else:
             print("USB CH341 Open Failed!")
+            
 
     def read(self, addr):
         if USBI2C.ch341.CH341OpenDevice(self.usb_id) != -1:
