@@ -9,7 +9,6 @@ import numpy as np
 # MAX30102寄存器地址
 from address import *
 
-PPG_RDY_BIT_MASK = 0x40  # 第6位对应的位掩码，值为64或者0x40
 
 
 class USBI2C():

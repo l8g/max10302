@@ -1,4 +1,6 @@
 
+MAX30102_ADDRESS = 0xAE  # 7-bit I2C address
+
 # Interrupt status register addresses
 REG_INTR_STATUS_1 = 0x00  # Interrupt status 1
 REG_INTR_STATUS_2 = 0x01  # Interrupt status 2
@@ -40,3 +42,7 @@ REG_PROX_INT_THRESH = 0x30  # Proximity interrupt threshold
 # Device ID register addresses
 REG_REV_ID = 0xFE  # Revision ID
 REG_PART_ID = 0xFF  # Part ID
+
+
+
+PPG_RDY_BIT_MASK = 0x40  # 第6位对应的位掩码，值为64或者0x40
