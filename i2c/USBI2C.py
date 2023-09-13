@@ -3,9 +3,14 @@
 import os
 import time
 from ctypes import *
+import matplotlib.pyplot as plt
+import numpy as np
+
+# MAX30102寄存器地址
+from address import *
 
 PPG_RDY_BIT_MASK = 0x40  # 第6位对应的位掩码，值为64或者0x40
-REG_INTR_STATUS_1 = 0x00  # MAX30102的Interrupt Status 1寄存器地址
+
 
 class USBI2C():
     ch341 = windll.LoadLibrary("CH341DLL.dll")
@@ -17,7 +22,7 @@ class USBI2C():
             USBI2C.ch341.CH341CloseDevice(self.usb_id)
         else:
             print("USB CH341 Open Failed!")
-            
+
 
     def read(self, addr):
         if USBI2C.ch341.CH341OpenDevice(self.usb_id) != -1:
@@ -45,21 +50,41 @@ class USBI2C():
             print("USB CH341 Open Failed!")
 
     def reset_sensor(self):
-        self.write(0x09, 0x40)
+        self.write(REG_MODE_CONFIG, 0x40)
 
     def initialize_sensor(self):
-        # MAX30102 初始化
-        self.write(0x02, 0xC0)  # 设置中断
-        self.write(0x03, 0x00)  
-        self.write(0x04, 0x00)  # FIFO写指针
-        self.write(0x05, 0x00)  # 溢出计数器
-        self.write(0x06, 0x00)  # FIFO读指针
-        self.write(0x08, 0x0F)  # FIFO配置
-        self.write(0x09, 0x03)  # 工作模式
-        self.write(0x0A, 0x27)  # SpO2配置
-        self.write(0x0C, 0x32)  # LED1功率
-        self.write(0x0D, 0x32)  # LED2功率
-        self.write(0x10, 0x7F)  # Pilot LED功率
+        # Initialize the MAX30102 sensor using predefined constants
+        
+        # Set interrupts
+        self.write(REG_INTR_ENABLE_1, 0xC0)
+        self.write(REG_INTR_ENABLE_2, 0x00)
+        
+        # Initialize FIFO write pointer
+        self.write(REG_FIFO_WR_PTR, 0x00)
+        
+        # Initialize overflow counter
+        self.write(REG_OVF_COUNTER, 0x00)
+        
+        # Initialize FIFO read pointer
+        self.write(REG_FIFO_RD_PTR, 0x00)
+        
+        # Set FIFO configuration
+        self.write(REG_FIFO_CONFIG, 0x0F)
+        
+        # Set mode configuration
+        self.write(REG_MODE_CONFIG, 0x03)
+        
+        # Set SpO2 configuration
+        self.write(REG_SPO2_CONFIG, 0x27)
+        
+        # Set LED1 pulse amplitude
+        self.write(REG_LED1_PA, 0x32)
+        
+        # Set LED2 pulse amplitude
+        self.write(REG_LED2_PA, 0x32)
+        
+        # Set Pilot LED pulse amplitude
+        self.write(REG_PILOT_PA, 0x7F)
 
 
     def max30102_read_fifo(self):
@@ -72,38 +97,20 @@ class USBI2C():
             obuf[1] = 0x07  # REG_FIFO_DATA
 
             # Writing 2 bytes, reading 6 bytes
-            print(USBI2C.ch341.CH341StreamI2C(self.usb_id, 2, obuf, 6, ibuf))
+            USBI2C.ch341.CH341StreamI2C(self.usb_id, 2, obuf, 6, ibuf)
 
             intr_status_1 = self.read(0x00)  # Read REG_INTR_STATUS_1
             intr_status_2 = self.read(0x01)  # Read REG_INTR_STATUS_2
 
-            print("intr_status_1: ", intr_status_1, "intr_status_2: ", intr_status_2)
+            # print("intr_status_1: ", intr_status_1, "intr_status_2: ", intr_status_2)
 
             USBI2C.ch341.CH341CloseDevice(self.usb_id)
 
+            # print(ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4], ibuf[5], type(ibuf[0]))
+
             # 解析数据
-            fifo_red = 0
-            fifo_ir = 0
-            
-            un_temp = ibuf[0]
-            un_temp <<= 14
-            fifo_red += un_temp
-            un_temp = ibuf[1]
-            un_temp <<= 6
-            fifo_red += un_temp
-            un_temp = ibuf[2]
-            un_temp >>= 2
-            fifo_red += un_temp
-            
-            un_temp = ibuf[3]
-            un_temp <<= 14
-            fifo_ir += un_temp
-            un_temp = ibuf[4]
-            un_temp <<= 6
-            fifo_ir += un_temp
-            un_temp = ibuf[5]
-            un_temp >>= 2
-            fifo_ir += un_temp
+            fifo_red = extract_bits(ibuf[0], ibuf[1], ibuf[2])
+            fifo_ir = extract_bits(ibuf[3], ibuf[4], ibuf[5])
 
             return fifo_red, fifo_ir
         else:
@@ -114,12 +121,53 @@ class USBI2C():
         status = self.read(REG_INTR_STATUS_1)
         return bool(status & PPG_RDY_BIT_MASK)
     
+def extract_bits(byte1, byte2, byte3):
+    # 取出byte1的后两位
+    last_two_bits_byte1 = byte1 & 0b11  # 与二进制'11'进行按位与操作，相当于取出后两位
+
+    # 将last_two_bits_byte1左移16位
+    last_two_bits_byte1_shifted = (last_two_bits_byte1 & 0xff) << 16
+
+    # 将byte2左移8位
+    byte2_shifted = (byte2 & 0xff) << 8
+
+    # 组合所有的位以形成一个18位的数字
+    combined = last_two_bits_byte1_shifted | byte2_shifted | (byte3 & 0xff)
+    
+    return combined
 
 
 if __name__ == "__main__":
     usbi2c = USBI2C(0, 0xAE)
     usbi2c.reset_sensor()
     usbi2c.initialize_sensor()
+
+    plt.ion()  # 开启交互模式
+    fig, ax = plt.subplots()
+    s1_list = []
+    timestamps = []
+
+    start_time = time.time()
+
     while True:
-        while usbi2c.check_PPG_RDY() == False:
-            print(usbi2c.max30102_read_fifo())
+        if usbi2c.check_PPG_RDY():
+            s1, s2 = usbi2c.max30102_read_fifo()
+            print(s1, s2)
+           
+            current_time = time.time() - start_time  # 获取当前时间戳
+        
+            # 将数据和时间戳添加到列表
+            s1_list.append(s1)
+            timestamps.append(current_time)
+            
+            # 如果数据过多，可以考虑只保存和显示最近的N个数据点
+            if len(s1_list) > 100:  # 这里以100为例
+                del s1_list[0]
+                del timestamps[0]
+
+            ax.clear()  # 清除之前的图形
+            ax.plot(timestamps, s1_list)  # 绘制实时数据
+            plt.xlabel('Time')
+            plt.ylabel('s1 Value')
+            plt.title('Real-time s1 plot with Timestamps')
+            plt.pause(0.01)  # 稍微暂停以便更新图形
