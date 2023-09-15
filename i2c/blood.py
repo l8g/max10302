@@ -1,12 +1,17 @@
 import numpy as np
 from FFT import FFT
+from address import *
+
+import drawer
 
 class BloodData:
     def __init__(self):
         self.heart = 0
         self.SpO2 = 0
 
-        
+
+drawer.figure(1)
+
 def blood_data_translate(s1, s2, t):
     FFT_N = len(s1)
     blood_data = BloodData()
@@ -31,21 +36,29 @@ def blood_data_translate(s1, s2, t):
     # FFT 变换
     s1_fft = np.fft.fft(s1)
     s2_fft = np.fft.fft(s2)
+
     
     # 解平方
     s1_magnitude = np.abs(s1_fft)
     s2_magnitude = np.abs(s2_fft)
+
+    s1_magnitude[0] = 0
+    s2_magnitude[0] = 0
     
+    # 画图
+    drawer.update(1, s1_magnitude[:200])
+
     # 计算交流分量
     ac_red = np.sum(s1_magnitude[1:])
     ac_ir = np.sum(s2_magnitude[1:])
     
     # 读取峰值点的横坐标
-    s1_max_index = np.argmax(s1_magnitude[30:])
-    s2_max_index = np.argmax(s2_magnitude[30:])
+    s1_max_index = np.argmax(s1_magnitude[20:200]) + 20
+    s2_max_index = np.argmax(s2_magnitude[4:34])
+    print(s1_max_index)
     
     # 心率计算
-    heart_rate = 60 * ((100.0 * s1_max_index) / 512.0)
+    heart_rate = 60 * ((100.0 * s1_max_index) / FFT_N)
     blood_data.heart = heart_rate
     
     # 血氧含量计算

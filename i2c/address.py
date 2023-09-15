@@ -46,3 +46,6 @@ REG_PART_ID = 0xFF  # Part ID
 
 
 PPG_RDY_BIT_MASK = 0x40  # 第6位对应的位掩码，值为64或者0x40
+
+
+SIGNAL_LENGTH = 3000  # 信号长度
