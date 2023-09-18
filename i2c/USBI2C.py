@@ -12,7 +12,7 @@ from address import *
 
 
 class USBI2C():
-    ch341 = windll.LoadLibrary("CH341DLL.dll")
+    ch341 = windll.LoadLibrary("CH341DLLA64.dll")
     def __init__(self, usb_dev = 0, i2c_dev = 0x5c):
         self.usb_id   = usb_dev
         self.dev_addr = i2c_dev
