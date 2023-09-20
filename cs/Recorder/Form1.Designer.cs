@@ -34,7 +34,7 @@
             stop = new Button();
             subject = new TextBox();
             log = new TextBox();
-            cameraIndex = new TextBox();
+            cameraIndex = new MaskedTextBox();
             label1 = new Label();
             label2 = new Label();
             start = new Button();
@@ -103,6 +103,9 @@
             cameraIndex.Name = "cameraIndex";
             cameraIndex.Size = new Size(100, 23);
             cameraIndex.TabIndex = 7;
+            cameraIndex.Text = "0";
+            cameraIndex.Mask = "00";
+            cameraIndex.HidePromptOnLeave = true;
             // 
             // label1
             // 
@@ -164,7 +167,7 @@
         private Button stop;
         private TextBox subject;
         private TextBox log;
-        private TextBox cameraIndex;
+        private MaskedTextBox cameraIndex;
         private Label label1;
         private Label label2;
         private Button start;

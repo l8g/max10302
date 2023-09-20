@@ -23,10 +23,10 @@ namespace Recorder
         public bool IsRecording { get; private set; }
         public bool IsCanceled => cancellationSource.IsCancellationRequested;
 
-        public DataCollector()
+        public DataCollector(int cameraIndex)
         {
             max30102 = new MAX30102();
-            capture = new VideoCapture(0);
+            capture = new VideoCapture(cameraIndex);
 
             capture.Set(Emgu.CV.CvEnum.CapProp.FrameWidth, cameraWidth);
             capture.Set(Emgu.CV.CvEnum.CapProp.FrameHeight, cameraHeight);
