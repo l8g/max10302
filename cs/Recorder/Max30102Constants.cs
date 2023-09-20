@@ -47,4 +47,7 @@
     public const byte PPG_RDY_BIT_MASK = 0x40;  // Bit mask for 6th bit, value is 64 or 0x40
 
     public const int SIGNAL_LENGTH = 3000;  // Signal length
+
+    public const int YUY2 = 'Y' | ('U' << 8) | ('Y' << 16) | ('2' << 24);
+
 }
