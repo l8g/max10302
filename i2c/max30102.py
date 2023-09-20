@@ -71,6 +71,10 @@ class MAX30102:
 
     def reset_write_pointer(self):
         ch341.write(REG_FIFO_WR_PTR, 0x00)
+    
+    def clear_fifo(self):
+        self.reset_read_pointer()
+        self.reset_write_pointer()
 
     def get_read_pointer(self):
         return ch341.read(REG_FIFO_RD_PTR)

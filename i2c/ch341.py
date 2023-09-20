@@ -4,7 +4,7 @@
 from ctypes import *
 from address import *
 
-ch341 = windll.LoadLibrary("CH341DLL.dll")
+ch341 = windll.LoadLibrary("CH341DLLA64.dll")
 
 usb_id = 0
 dev_addr = MAX30102_ADDRESS
